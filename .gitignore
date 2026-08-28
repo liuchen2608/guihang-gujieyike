@@ -1,0 +1,31 @@
+# Private configuration and runtime data
+.env
+.env.*
+!.env.example
+**/.vefaas/
+**/.wrangler/
+**/.vercel/
+**/private-migration/
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+
+# Dependencies, build output and local tooling
+**/node_modules/
+**/.next/
+**/.vinext/
+**/dist/
+**/out/
+**/outputs/
+**/work/
+**/coverage/
+**/.agents/
+**/.codex/
+*.tsbuildinfo
+next-env.d.ts
+*.log
+.DS_Store

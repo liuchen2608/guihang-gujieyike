@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1787652167906,
+      "tag": "0000_redundant_the_fallen",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787655156115,
+      "tag": "0001_friendly_slayback",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787655187766,
+      "tag": "0002_easy_shooting_star",
+      "breakpoints": true
+    }
+  ]
+}

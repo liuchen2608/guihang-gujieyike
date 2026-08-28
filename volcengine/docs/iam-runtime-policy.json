@@ -1,0 +1,19 @@
+{
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["tos:GetBucketVersioning"],
+      "Resource": ["trn:tos:::guihang-saves-20260827-7d43"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["tos:GetObject", "tos:PutObject"],
+      "Resource": ["trn:tos:::guihang-saves-20260827-7d43/guihang/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["tos:DeleteObject"],
+      "Resource": ["trn:tos:::guihang-saves-20260827-7d43/guihang/sessions/*"]
+    }
+  ]
+}
