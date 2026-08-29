@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PointerEvent, useEffect, useRef, useState } from "react";
 import { githubLoginHref, loadHomeSession } from "@/lib/home-session";
 import { requireStorage } from "@/lib/client-storage";
+import { useInviteAccess } from "@/components/invite-provider";
 
 const systemSignals = [
   { quote: "先活下去。这个世界的空间异常，是我们目前唯一可以追踪的归乡线索。", status: "空间扰动持续", scan: "12.4 km" },
@@ -12,6 +13,7 @@ const systemSignals = [
 ];
 
 export default function HomeClient() {
+  const invitation = useInviteAccess();
   const pageRef = useRef<HTMLElement>(null);
   const [saveId, setSaveId] = useState<string | null>(null);
   const [signalIndex, setSignalIndex] = useState(0);
@@ -33,7 +35,7 @@ export default function HomeClient() {
         .finally(() => { if (!cancelled) setAuthReady(true); });
     }, 0);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, []);
+  }, [invitation.authorized]);
   useEffect(() => {
     const timer = window.setInterval(() => setSignalIndex((current) => (current + 1) % systemSignals.length), 4200);
     return () => window.clearInterval(timer);
@@ -48,7 +50,7 @@ export default function HomeClient() {
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    setUser(null); setSaveId(null);
+    window.location.assign("/");
   }
 
   return (
@@ -66,9 +68,10 @@ export default function HomeClient() {
           <h1>机甲坠毁于异界，<br />而她还在原来的世界等你。</h1>
           <p className="hero-lead">与受损机甲 AI“归航”对话，分析未知力量，承担每一次选择的代价，并寻找回到爱人身边的方法。</p>
           <div className="hero-actions">
-            <a className="primary-button start-journey-button" href="/intro" aria-label="开始穿越，进入开场介绍">开始穿越 <span aria-hidden="true">→</span></a>
+            <a className="primary-button start-journey-button" href="/intro" onClick={(event) => { if (!invitation.authorized) { event.preventDefault(); invitation.requestAccess("/intro"); } }} aria-label="开始穿越，进入开场介绍">开始穿越 <span aria-hidden="true">→</span></a>
             {saveId && <a className="secondary-button" href={`/game/${encodeURIComponent(saveId)}`}>继续上次存档</a>}
           </div>
+          <p className="storage-note">{invitation.authorized ? "试玩资格已验证 · 欢迎继续你的归途" : "邀请试玩中 · 输入邀请码后即可开始，无需强制注册"}</p>
           <div className="hero-facts"><span>三幕剧情可推进</span><span>NPC 关系会记忆</span><span>手机与电脑可玩</span></div>
         </div>
         <aside className="mission-card" aria-live="polite">

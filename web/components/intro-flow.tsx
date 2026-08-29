@@ -51,7 +51,7 @@ export default function IntroFlow() {
           <label className="codename-field"><span>坍塌前，你最后对她说</span><input value={homeAnchor} maxLength={120} onChange={(event) => setHomeAnchor(event.target.value)} placeholder="例如：等我回来" /></label>
         </div>}
         {error && <div className="error-banner" role="alert"><p>{error}</p><Link href="/">返回首页检查是否已有存档</Link></div>}
-        {step === 3 && <p className="storage-note">无需登录即可试玩。匿名身份保存在当前浏览器，请勿清除网站数据；微信与外部浏览器不共享匿名存档。</p>}
+        {step === 3 && <p className="storage-note">邀请码已验证，无需登录即可试玩。匿名身份保存在当前浏览器，请勿清除网站数据或 Cookie；微信与外部浏览器不共享匿名资格和存档。</p>}
         <nav className="intro-nav">
           <button className="secondary-button" disabled={step === 0 || pending} onClick={() => setStep(step - 1)}>上一步</button>
           {step < 3 ? <button className="primary-button" onClick={() => setStep(step + 1)}>下一幕</button> : <button className="primary-button" disabled={pending} onClick={startGame}>{pending ? "正在建立连接…" : "开始穿越 →"}</button>}

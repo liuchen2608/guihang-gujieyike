@@ -20,7 +20,7 @@ test("an anonymous stale save is hidden when the server no longer has it", async
   const session = await loadHomeSession(storage, async (input) => {
     requested.push(input);
     if (input === "/api/auth/me") return Response.json({ error: "未登录" }, { status: 401 });
-    if (input.includes("/api/saves?playerId=")) return Response.json({ save: null });
+    if (input === "/api/saves") return Response.json({ save: null });
     throw new Error(`unexpected request: ${input}`);
   });
 
@@ -28,7 +28,7 @@ test("an anonymous stale save is hidden when the server no longer has it", async
   assert.equal(storage.getItem(HOME_SAVE_KEY), null);
   assert.deepEqual(requested, [
     "/api/auth/me",
-    "/api/saves?playerId=11111111-1111-4111-8111-111111111111",
+    "/api/saves",
   ]);
 });
 

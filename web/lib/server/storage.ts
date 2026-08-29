@@ -5,12 +5,12 @@ import { turnWriteStatements } from "@/lib/server/turn-write";
 
 let schemaReady: Promise<void> | undefined;
 
-function database() {
+export function database() {
   if (!env.DB) throw new Error("D1 数据库暂不可用");
   return env.DB;
 }
 
-async function ensureSchema() {
+export async function ensureSchema() {
   if (!schemaReady) {
     const db = database();
     schemaReady = db.batch([
@@ -23,6 +23,13 @@ async function ensureSchema() {
       db.prepare("CREATE TABLE IF NOT EXISTS auth_sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at TEXT NOT NULL, created_at TEXT NOT NULL)"),
       db.prepare("CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON auth_sessions(user_id)"),
       db.prepare("CREATE INDEX IF NOT EXISTS idx_game_saves_player_updated ON game_saves(player_id, updated_at DESC)"),
+      db.prepare("CREATE TABLE IF NOT EXISTS security_records (key TEXT PRIMARY KEY, revision INTEGER NOT NULL, value_json TEXT NOT NULL)"),
+      db.prepare("CREATE TABLE IF NOT EXISTS invite_grants (token_hash TEXT PRIMARY KEY, invite_hash TEXT NOT NULL, owner_id TEXT NOT NULL, account_id TEXT, created_at TEXT NOT NULL, expires_at TEXT NOT NULL)"),
+      db.prepare("CREATE INDEX IF NOT EXISTS invite_grants_owner_idx ON invite_grants(owner_id)"),
+      db.prepare("CREATE INDEX IF NOT EXISTS invite_grants_code_idx ON invite_grants(invite_hash)"),
+      db.prepare("CREATE INDEX IF NOT EXISTS invite_grants_account_idx ON invite_grants(account_id)"),
+      db.prepare("CREATE TABLE IF NOT EXISTS invite_attempts (bucket_key TEXT PRIMARY KEY, attempts INTEGER NOT NULL, expires_at TEXT NOT NULL)"),
+      db.prepare("CREATE INDEX IF NOT EXISTS invite_attempts_expiry_idx ON invite_attempts(expires_at)"),
     ]).then(() => undefined).catch((error) => { schemaReady = undefined; throw error; });
   }
   return schemaReady;
@@ -120,13 +127,4 @@ export async function readAuthUser(tokenHash: string): Promise<AuthUser | null> 
 export async function deleteAuthSession(tokenHash: string) {
   await ensureSchema();
   await database().prepare("DELETE FROM auth_sessions WHERE token_hash = ?").bind(tokenHash).run();
-}
-
-export async function adoptAnonymousData(anonymousId: string, userId: string) {
-  await ensureSchema();
-  const db = database();
-  await db.batch([
-    db.prepare("UPDATE game_saves SET player_id = ? WHERE player_id = ?").bind(userId, anonymousId),
-    db.prepare("UPDATE feedback SET player_id = ? WHERE player_id = ?").bind(userId, anonymousId),
-  ]);
 }

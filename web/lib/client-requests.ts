@@ -1,4 +1,5 @@
 import type { GameMessage, InputMode, SaveView } from "./game.ts";
+import { INVITE_EVENT, INVITE_REQUIRED } from "./invite-policy.ts";
 
 export type AiMeta = { provider: "deepseek" | "local"; model: string; fallback: boolean; npcName?: string; intent?: string; hostilityLevel?: number; retrievalCount: number; sources: string[] };
 export type TurnReply = { state?: SaveView["state"]; messages?: GameMessage[]; ai?: AiMeta; requiresConfirmation?: boolean; warning?: string; error?: string; code?: string; resultUrl?: string };
@@ -13,6 +14,7 @@ export async function requestJson<T>(url: string, init: RequestInit = {}, timeou
   try {
     const response = await fetcher(url, { ...init, signal: controller.signal, cache: "no-store" });
     const data = await response.json() as T;
+    if (response.status === 403 && data && typeof data === "object" && "code" in data && data.code === INVITE_REQUIRED && typeof window !== "undefined") window.dispatchEvent(new Event(INVITE_EVENT));
     return { response, data };
   } finally { clearTimeout(timeout); }
 }
@@ -31,7 +33,7 @@ export async function postGameTurn(saveId: string, body: { playerId: string | nu
   } catch { throw new UncertainTurnError(); }
   const { response, data } = result;
   if (!data || typeof data !== "object") throw new UncertainTurnError();
-  if (response.status >= 500 || data.code === "VERSION_CONFLICT") throw new UncertainTurnError();
+  if (response.status >= 500 || ["VERSION_CONFLICT", "TURN_IN_PROGRESS", "TURN_UNCERTAIN"].includes(data.code || "")) throw new UncertainTurnError();
   if (!response.ok && !data.resultUrl) throw new Error(data.error || "行动未能完成");
   if (response.ok && !data.requiresConfirmation && (!data.state || data.state.saveId !== saveId || typeof data.state.version !== "number" || !Array.isArray(data.messages))) throw new UncertainTurnError();
   return data;

@@ -29,6 +29,7 @@ export default function GameClient({ saveId }: { saveId: string }) {
   const [mode, setMode] = useState<InputMode>("ask");
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const [needsReconcile, setNeedsReconcile] = useState(false);
   const [error, setError] = useState("");
   const [aiMeta, setAiMeta] = useState<AiMeta | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ mode: InputMode; text: string; warning: string } | null>(null);
@@ -40,11 +41,11 @@ export default function GameClient({ saveId }: { saveId: string }) {
   const loadSave = useCallback(async () => {
     setError("");
     try {
-      const playerId = window.localStorage.getItem("guihang_player_id");
-      const response = await fetch(`/api/saves/${saveId}${playerId ? `?playerId=${encodeURIComponent(playerId)}` : ""}`);
+      const response = await fetch(`/api/saves/${saveId}`, { cache: "no-store" });
       const data = await response.json() as SaveView & { error?: string };
       if (!response.ok) throw new Error(data.error || "读取失败");
       setSave(data);
+      setNeedsReconcile(false);
       window.localStorage.setItem("guihang_save_id", saveId);
     } catch (reason) { setError(reason instanceof Error ? reason.message : "读取存档失败"); }
   }, [saveId]);
@@ -100,11 +101,16 @@ export default function GameClient({ saveId }: { saveId: string }) {
 
   async function send(modeToSend: InputMode, text: string, confirmed = false) {
     if (!save || pending) return;
+    if (needsReconcile) { setError("请先点击核对存档，确认上一回合的结果。"); return; }
     setPending(true); setError("");
     try {
       const playerId = window.localStorage.getItem("guihang_player_id");
       const response = await fetch(`/api/saves/${saveId}/turns`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ playerId, mode: modeToSend, text, version: save.state.version, confirmed }) });
-      const data = await response.json() as { state?: SaveView["state"]; messages?: GameMessage[]; ai?: AiMeta; requiresConfirmation?: boolean; warning?: string; error?: string; resultUrl?: string };
+      const data = await response.json() as { state?: SaveView["state"]; messages?: GameMessage[]; ai?: AiMeta; requiresConfirmation?: boolean; warning?: string; error?: string; code?: string; resultUrl?: string };
+      if (response.status >= 500 || ["VERSION_CONFLICT", "TURN_UNCERTAIN", "TURN_IN_PROGRESS"].includes(data.code || "")) {
+        setNeedsReconcile(true);
+        throw new Error(data.error || "行动结果尚未确认，请核对存档，勿重复提交。");
+      }
       if (data.requiresConfirmation) { setConfirmAction({ mode: modeToSend, text, warning: data.warning || "这项行动不可逆。" }); return; }
       if (!response.ok || !data.state || !data.messages) { if (data.resultUrl) router.push(data.resultUrl); throw new Error(data.error || "行动未能完成"); }
       revealFeedback(save.state, data.state);
@@ -112,7 +118,7 @@ export default function GameClient({ saveId }: { saveId: string }) {
       if (data.ai) setAiMeta(data.ai);
       if (modeToSend === "talk" && !canTalkFor(data.state)) setMode("act");
       setDraft(""); setConfirmAction(null);
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "连接中断，本次行动没有结算"); }
+    } catch (reason) { if (reason instanceof TypeError) setNeedsReconcile(true); setError(reason instanceof Error ? reason.message : "连接中断，结果尚未确认，请核对存档。"); }
     finally { setPending(false); }
   }
 
@@ -164,7 +170,7 @@ export default function GameClient({ saveId }: { saveId: string }) {
               backgroundPosition: `center, center, ${sceneImage.position}`,
             } : undefined}
           ><div className="time-marker"><span />穿越后 · 未知时间<span /></div>{save.messages.map((message) => <Message key={message.id} message={message} />)}{pending && <div className="thinking-card"><span className="thinking-core" /><div><strong>归航正在演算</strong><small>{mode === "talk" ? "解析语气 · 调取人物记忆 · 生成回应" : mode === "act" ? "校验规则 · 计算代价 · 推进时间" : "改写问题 · 检索世界观 · 核验证据"}</small></div><i><b /><b /><b /></i></div>}<div ref={endRef} /></div>
-          {error && <div className="stream-banner"><span>{error}</span><button onClick={() => setError("")}>关闭</button></div>}
+          {error && <div className="stream-banner"><span>{error}</span>{needsReconcile && <button disabled={pending} onClick={() => void loadSave()}>核对存档</button>}<button onClick={() => setError("")}>关闭</button></div>}
           {turnFeedback && <div key={turnFeedback.id} className={`turn-feedback ${turnFeedback.tone}`}>{turnFeedback.items.map((item) => <span key={item}>{item}</span>)}</div>}
           {state.ended ? <div className="chapter-end-bar"><span>{state.ending === "beacon" ? "第二幕已完成，可以从当前存档进入第三幕。" : "第三幕已完成，进度已保存。"}</span>{state.ending === "beacon" ? <button className="primary-button" disabled={pending} onClick={() => void send("act", "继续进入第三幕")}>{pending ? "正在续接…" : "进入第三幕 →"}</button> : <Link className="primary-button" href={`/game/${saveId}/result`}>查看阶段结算 →</Link>}</div> : <>
             <div className="suggestions">{suggestions.map((item, index) => <button key={item} className={draft === item ? "selected" : ""} onClick={() => { setDraft(item); setMode("act"); }}><kbd>{index + 1}</kbd>{item}</button>)}</div>

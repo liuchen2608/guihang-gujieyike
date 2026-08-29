@@ -1,15 +1,19 @@
 import assert from "node:assert/strict";
 import { postGameTurn, UncertainTurnError } from "../lib/client-requests.ts";
 import { suggestionsFor } from "../lib/game.ts";
+import { localInviteClient, readTestCodes, redeemTestCode } from "./local-invite-client.mjs";
 
 const origin = new URL(process.argv[2] || "http://localhost:3001");
 if (!["localhost", "127.0.0.1", "[::1]"].includes(origin.hostname)) throw new Error("This test creates saves. Only a local server is allowed.");
 const playerId = crypto.randomUUID();
-const create = await fetch(new URL("/api/saves", origin), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ playerId, codename: "手机接口验收", homeAnchor: "等我回来" }) });
+const client = localInviteClient(origin, "127.0.0.3");
+const invite = await redeemTestCode(client, readTestCodes(process.argv[3])[5].code, playerId);
+assert.equal(invite.status, 200);
+const create = await client.fetch("/api/saves", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ playerId, codename: "手机接口验收", homeAnchor: "等我回来" }) });
 assert.equal(create.status, 201);
 let save = await create.json();
 const saveId = save.state.saveId;
-const fetchLocal = (input, init) => fetch(new URL(String(input), origin), init);
+const fetchLocal = (input, init) => client.fetch(input, init);
 const read = async () => {
   const response = await fetchLocal(`/api/saves/${saveId}?playerId=${playerId}`);
   assert.equal(response.status, 200);

@@ -1,4 +1,5 @@
 "use client";
+import { ensureGuestSession } from "@/lib/guest-client";
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
@@ -14,8 +15,7 @@ export default function FeedbackForm() {
   async function submit(event: FormEvent) {
     event.preventDefault(); setPending(true); setError("");
     try {
-      let playerId = window.localStorage.getItem("guihang_player_id");
-      if (!playerId) { playerId = crypto.randomUUID(); window.localStorage.setItem("guihang_player_id", playerId); }
+      const playerId = await ensureGuestSession();
       const response = await fetch("/api/feedback", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ saveId: params.get("saveId") || undefined, playerId, understoodGoal: form.understoodGoal === "yes", trustedGuihang: form.trustedGuihang === "yes", continueChapterTwo: form.continueChapterTwo === "yes", rating: Number(form.rating), detail: form.detail, contact: form.contact }) });
       const data = await response.json() as { error?: string };
       if (!response.ok) throw new Error(data.error || "提交失败");
