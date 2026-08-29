@@ -39,14 +39,12 @@ export async function loadHomeSession(storage: StorageReader, fetcher: Fetcher):
         saveId = latest.saveId;
         persistValidatedSave(storage, saveId);
       }
-    } else if (anonymousId) {
-      const latest = await readLatestSaveId(fetcher, `/api/saves?playerId=${encodeURIComponent(anonymousId)}`);
+    } else {
+      const latest = await readLatestSaveId(fetcher, "/api/saves");
       if (latest.checked) {
         saveId = latest.saveId;
         persistValidatedSave(storage, saveId);
       }
-    } else {
-      persistValidatedSave(storage, null);
     }
   } catch {
     // A temporary network failure should hide resume instead of presenting an unverified destination.

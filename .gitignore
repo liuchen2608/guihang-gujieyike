@@ -6,6 +6,7 @@
 **/.wrangler/
 **/.vercel/
 **/private-migration/
+volcengine/docs/migration-status.md
 *.pem
 *.key
 *.p12

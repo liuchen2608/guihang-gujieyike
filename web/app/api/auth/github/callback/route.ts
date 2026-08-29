@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { NextResponse } from "next/server";
 import { establishSession, readCookie, safeReturnTo, SESSION_COOKIE } from "@/lib/server/auth";
-import { adoptAnonymousData } from "@/lib/server/storage";
+import { bindInvitationToAccount } from "@/lib/server/invite-access";
 
 type GitHubProfile = { id: number; login: string; name?: string | null; avatar_url?: string | null };
 
@@ -44,13 +44,13 @@ export async function GET(request: Request) {
     if (!profileResponse.ok || !profile.id || !profile.login) throw new Error("profile_fetch_failed");
 
     const session = await establishSession(profile);
-    const anonymousId = readCookie(request, "guihang_oauth_anonymous");
-    if (anonymousId) await adoptAnonymousData(anonymousId, session.user.id);
+    await bindInvitationToAccount(request, session.user.id, readCookie(request, "guihang_oauth_invite"));
     const response = NextResponse.redirect(new URL(returnTo, url.origin));
     response.cookies.set(SESSION_COOKIE, session.token, { httpOnly: true, secure: url.protocol === "https:", sameSite: "lax", path: "/", expires: session.expires });
     response.cookies.delete("guihang_oauth_state");
     response.cookies.delete("guihang_oauth_return");
     response.cookies.delete("guihang_oauth_anonymous");
+    response.cookies.delete("guihang_oauth_invite");
     return response;
   } catch (error) {
     console.error("github_oauth_failed", error);

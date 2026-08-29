@@ -1,0 +1,45 @@
+.invite-wait-page { min-height: 100svh; display: grid; place-items: center; padding: 32px 20px; background: radial-gradient(ellipse at 50% 20%, #17342d 0, #09100f 48%, #070b0c 100%); }
+.invite-wait-card { width: min(100%, 560px); text-align: center; }
+.invite-wait-card .invite-emblem { margin: 0 auto 32px; }
+.invite-wait-card h1 { margin: 20px 0; font-family: Georgia, "Songti SC", serif; font-size: clamp(32px, 6vw, 52px); line-height: 1.4; font-weight: 500; }
+.invite-wait-card > p:not(.eyebrow) { color: #9aaea6; line-height: 1.8; margin-bottom: 30px; }
+.app-dialog.invite-dialog { width: min(520px, calc(100vw - 32px)); max-height: min(900px, calc(var(--visual-height, 100dvh) - 24px)); border: 1px solid #305548; border-radius: 26px; background: linear-gradient(155deg, #10221d, #0b1312 50%, #0c1714); box-shadow: 0 30px 90px #0009, inset 0 1px 0 #a8eac010; }
+.invite-dialog .app-dialog-heading { padding: 16px 24px; border-bottom: 1px solid #263c33; }
+.invite-dialog .app-dialog-heading h2 { color: #a8bdb3; font-size: 13px; letter-spacing: .15em; }
+.invite-dialog .app-dialog-heading button { min-width: 60px; min-height: 44px; color: #bccbc4; }
+.invite-dialog .app-dialog-body { padding: 12px 32px 26px; }
+.invite-card-art { height: 120px; position: relative; display: grid; place-items: center; overflow: hidden; margin: 0 -12px 14px; }
+.invite-orbit { position: absolute; width: 280px; height: 108px; border: 1px solid #79c3a426; border-radius: 50%; transform: rotate(-19deg); }
+.invite-orbit::after { content: ""; position: absolute; inset: 13px -22px; border: 1px solid #79c3a41a; border-radius: 50%; transform: rotate(34deg); }
+.invite-emblem { width: 58px; height: 58px; display: grid; place-items: center; color: #b3e4ca; border: 1px solid #76b69580; border-radius: 15px; font-size: 27px; font-family: "Songti SC", serif; background: linear-gradient(140deg, #a2d6b52a, #21433720); box-shadow: 0 0 45px #80d8ae14; }
+.invite-coordinates { position: absolute; left: 0; bottom: 6px; font: 8px/1.8 monospace; letter-spacing: .14em; color: #70917e; }
+.invite-card-art > i { position: absolute; right: 18px; top: 45px; width: 5px; height: 5px; background: #b8e8cd; border-radius: 50%; box-shadow: 0 0 15px #6cf1b6; }
+.invite-eyebrow { font-size: 10px; letter-spacing: .2em; color: #95b9a6; margin: 0 0 10px; }
+.invite-title { font: 500 34px/1.4 Georgia, "Songti SC", serif; letter-spacing: .02em; margin: 0 0 14px; color: #ecf0e9; }
+.invite-title em { font-style: normal; color: #ade3c4; }
+.invite-description { font-size: 13px; color: #9cac9f; line-height: 1.9; margin: 0 0 24px; }
+.invite-form label { display: flex; justify-content: space-between; align-items: baseline; color: #d6e2d9; font-size: 13px; margin-bottom: 10px; gap: 8px; }
+.invite-form label span { color: #708c7b; font: 9px monospace; letter-spacing: .1em; }
+.invite-form input { width: 100%; min-width: 0; height: 56px; padding: 0 14px; border: 1px solid #40594b; border-radius: 12px; background: #06100cb0; color: #def0e4; font: 16px monospace; transition: border-color .2s, box-shadow .2s; }
+.invite-form input::placeholder { color: #779483; font: 13px sans-serif; }
+.invite-form input:focus { border-color: #9fd4b4; outline: none; box-shadow: 0 0 0 3px #92d0ac1a; }
+.invite-form input[aria-invalid="true"] { border-color: #c88e78; }
+.invite-input-help { color: #7f9888; font-size: 10px; margin: 9px 0 0; line-height: 1.7; }
+.invite-error { min-height: 30px; padding: 8px 0; font-size: 12px; line-height: 1.7; color: #efb59e; overflow-wrap: anywhere; }
+.invite-submit { width: 100%; display: flex; justify-content: space-between; min-height: 54px; border-radius: 12px; background: linear-gradient(110deg, #b6dcc1, #77c5a6); color: #112b20; font-size: 14px; }
+.invite-submit:disabled { opacity: .5; cursor: not-allowed; }
+.invite-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; font-size: 11px; color: #7f9689; }
+.invite-footer button { min-height: 44px; background: transparent; border: 0; color: #bfd6c6; font-size: 11px; padding: 0; }
+.invite-account-note { padding-top: 16px; margin-top: 8px; border-top: 1px solid #263b30; font-size: 11px; color: #819b8b; line-height: 1.9; }
+.invite-account-note a { color: #badac6; text-decoration: underline; text-underline-offset: 3px; }
+.invite-status-chip { color: #a8d8bd; font-size: 11px; border: 1px solid #335746; border-radius: 20px; padding: 8px 11px; }
+@media (max-width: 720px) {
+  .app-dialog.invite-dialog { width: calc(100vw - 24px); border-radius: 20px; }
+  .invite-dialog .app-dialog-heading { padding: 10px 18px; }
+  .invite-dialog .app-dialog-body { padding: 8px 22px max(18px, env(safe-area-inset-bottom)); }
+  .invite-card-art { height: 92px; margin-bottom: 8px; }
+  .invite-title { font-size: 30px; }
+  .invite-description { margin-bottom: 18px; }
+  .invite-status-chip { display: none; }
+}
+@media (max-height: 560px) { .invite-card-art { display: none; } .invite-title { font-size: 25px; } .invite-description { margin-bottom: 12px; } }

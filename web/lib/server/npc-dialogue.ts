@@ -82,7 +82,7 @@ ${knowledge || "本次没有检索到足以支持答案的资料。"}
 7. 必须先消化资料再用角色自己的话回答；不得复述“资料1”“确定事实”“限制与代价”“角色对话边界”“角色认知边界”“知识权限”等资料标题，不得输出任何英文键名、权限代码或下划线标识符。`;
 }
 
-export async function resolveNpcDialogue(state: GameState, mode: InputMode, text: string): Promise<{ state: GameState; messages: MessageDraft[]; ai: NpcAiMeta }> {
+export async function resolveNpcDialogue(state: GameState, mode: InputMode, text: string, ownerId: string): Promise<{ state: GameState; messages: MessageDraft[]; ai: NpcAiMeta }> {
   const status = deepSeekStatus();
   const resolution = resolveNpcRules(state, mode, text);
   if (!resolution) {
@@ -111,6 +111,7 @@ export async function resolveNpcDialogue(state: GameState, mode: InputMode, text
     const completion = await completeWithDeepSeek(
       systemPrompt({ state: resolution.state, npcId, settlement, knowledge }),
       `玩家原话：${text}\n改写后的检索问题：${query}\n请根据当前结算与NPC性格回应。`,
+      ownerId,
     );
     reply = sanitizeNpcReply(completion.text);
     model = completion.model;

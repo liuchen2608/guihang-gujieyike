@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { ownerIdentity } from "@/lib/server/auth";
+import { identityRequired as invitationRequired, ownerIdentity } from "@/lib/server/auth";
+import { readSmallJson, RequestError, requireSameOrigin, protectionResponse } from "@/lib/server/request-security";
+import { protectWrite } from "@/lib/server/protection";
 import { createSave, readLatestSave } from "@/lib/server/storage";
 
 export async function GET(request: Request) {
   try {
-    const anonymousId = new URL(request.url).searchParams.get("playerId");
-    const identity = await ownerIdentity(request, anonymousId);
-    if (!identity) return NextResponse.json({ error: "缺少玩家身份" }, { status: 401 });
-    return NextResponse.json({ save: await readLatestSave(identity.id) });
+    const identity = await ownerIdentity(request);
+    if (!identity) return invitationRequired();
+    return NextResponse.json({ save: await readLatestSave(identity.id) }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
     console.error("read_latest_save_failed", error);
     return NextResponse.json({ error: "暂时无法读取存档" }, { status: 500 });
@@ -16,16 +17,20 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as { codename?: string; playerId?: string; homeAnchor?: string };
-    const identity = await ownerIdentity(request, body.playerId);
-    if (!identity) return NextResponse.json({ error: "匿名身份无效" }, { status: 400 });
+    requireSameOrigin(request);
+    const identity = await ownerIdentity(request);
+    if (!identity) return invitationRequired();
+    const body = await readSmallJson(request);
+    if ((body.codename !== undefined && typeof body.codename !== "string") || (body.homeAnchor !== undefined && typeof body.homeAnchor !== "string")) throw new RequestError("角色信息格式无效。");
+    await protectWrite(request, identity.id, "create");
     const save = await createSave(
       identity.id,
-      body.codename || identity.user?.name || identity.user?.login || "",
-      body.homeAnchor?.slice(0, 120),
+      (typeof body.codename === "string" && body.codename) || identity.user?.name || identity.user?.login || "",
+      typeof body.homeAnchor === "string" ? body.homeAnchor.slice(0, 120) : undefined,
     );
-    return NextResponse.json(save, { status: 201 });
+    return NextResponse.json(save, { status: 201, headers: { "cache-control": "no-store" } });
   } catch (error) {
+    const blocked = protectionResponse(error); if (blocked) return blocked;
     console.error("create_save_failed", error);
     return NextResponse.json({ error: "暂时无法创建存档，请重试" }, { status: 500 });
   }

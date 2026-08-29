@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { aiEnabled, reserveAi } from "./protection";
 
 type DeepSeekResponse = {
   choices?: Array<{ message?: { content?: string } }>;
@@ -25,9 +26,11 @@ export function deepSeekStatus() {
   return { configured: Boolean(config), model: config?.model || "deepseek-v4-flash" };
 }
 
-export async function completeWithDeepSeek(systemPrompt: string, userPrompt: string): Promise<DeepSeekCompletion> {
+export async function completeWithDeepSeek(systemPrompt: string, userPrompt: string, ownerId: string): Promise<DeepSeekCompletion> {
+  if (!aiEnabled()) throw new Error("AI_PAUSED");
   const config = configuration();
   if (!config) throw new Error("DEEPSEEK_NOT_CONFIGURED");
+  await reserveAi(ownerId);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 25_000);
@@ -62,4 +65,3 @@ export async function completeWithDeepSeek(systemPrompt: string, userPrompt: str
     clearTimeout(timeout);
   }
 }
-

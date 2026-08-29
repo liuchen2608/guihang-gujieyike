@@ -3,5 +3,5 @@ import { currentUser } from "@/lib/server/auth";
 
 export async function GET(request: Request) {
   const user = await currentUser(request);
-  return user ? NextResponse.json({ user }) : NextResponse.json({ user: null }, { status: 401 });
+  return user ? NextResponse.json({ user }, { headers: { "cache-control": "no-store" } }) : NextResponse.json({ user: null }, { status: 401, headers: { "cache-control": "no-store" } });
 }

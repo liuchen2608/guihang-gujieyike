@@ -4,6 +4,7 @@ import { createContext, ReactNode, useContext, useEffect, useState, useSyncExter
 import { usePathname } from "next/navigation";
 import { COMPACT_QUERY, visibleViewport } from "@/lib/mobile-ui";
 import AudioSpace from "@/components/audio-space";
+import InviteProvider from "@/components/invite-provider";
 
 type Panel = "status" | "audio" | null;
 const UiContext = createContext<{ panel: Panel; setPanel: (panel: Panel) => void }>({ panel: null, setPanel: () => {} });
@@ -54,5 +55,5 @@ export default function GameUIProvider({ children }: { children: ReactNode }) {
       window.visualViewport?.removeEventListener("scroll", update);
     };
   }, []);
-  return <UiContext.Provider value={{ panel, setPanel }}>{children}<AudioSpace /></UiContext.Provider>;
+  return <UiContext.Provider value={{ panel, setPanel }}><InviteProvider>{children}</InviteProvider><AudioSpace /></UiContext.Provider>;
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ensureGuestSession } from "@/lib/guest-client";
 
 const scenes = [
   { number: "01", title: "约定", kicker: "原世界 · 出发之前", text: "她是强大机甲家族的长女，你却没有显赫姓氏。你们从小相识，一起扛过质疑、禁令与漫长分离，终于约定在这次勘探任务后完成婚礼。", quote: "任务结束就回来。这次不准再推迟。" },
@@ -24,8 +25,7 @@ export default function IntroFlow() {
     if (pending) return;
     setPending(true); setError("");
     try {
-      let playerId = window.localStorage.getItem("guihang_player_id");
-      if (!playerId) { playerId = crypto.randomUUID(); window.localStorage.setItem("guihang_player_id", playerId); }
+      const playerId = await ensureGuestSession();
       const response = await fetch("/api/saves", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ playerId, codename, homeAnchor }) });
       const data = await response.json() as { state?: { saveId: string }; error?: string };
       if (!response.ok || !data.state) throw new Error(data.error || "创建失败");
@@ -48,6 +48,7 @@ export default function IntroFlow() {
           <label className="codename-field"><span>坍塌前，你最后对她说</span><input value={homeAnchor} maxLength={120} onChange={(event) => setHomeAnchor(event.target.value)} placeholder="例如：等我回来" /></label>
         </div>}
         {error && <p className="error-banner">{error}</p>}
+        {step === 3 && <p>安全升级前的匿名存档仍保留，请联系邀请人验证恢复；新旅程不会自动认领旧编号。请允许 Cookie 并保留原浏览器数据。</p>}
         <nav className="intro-nav">
           <button className="secondary-button" disabled={step === 0 || pending} onClick={() => setStep(step - 1)}>上一步</button>
           {step < 3 ? <button className="primary-button" onClick={() => setStep(step + 1)}>下一幕</button> : <button className="primary-button" disabled={pending} onClick={startGame}>{pending ? "正在建立连接…" : "开始穿越 →"}</button>}

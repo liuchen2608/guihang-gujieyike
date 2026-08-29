@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import GameUIProvider from "@/components/game-ui-provider";
 import "./globals.css";
 import "./mobile.css";
+import "./invite.css";
 
 export const metadata: Metadata = {
   title: "归航：蛊界异客",
